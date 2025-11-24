@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: multisteam
+    env: node
+    repo: https://github.com/ksrstudio355-lgtm/multisteam.git
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
