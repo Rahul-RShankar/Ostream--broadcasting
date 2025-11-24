@@ -10,7 +10,7 @@ RUN pip3 install yt-dlp
 WORKDIR /
 
 # Copy package.json and package-lock.json
-COPY backend/package*.json ./
+COPY package*.json ./
 
 # Install node dependencies
 RUN npm install
@@ -23,6 +23,7 @@ EXPOSE 3000
 
 # Start backend server
 CMD ["node", "index.js"]
+
 
 
 
