@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiStream Studio - Professional Streaming Software</title>
+    <style>
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --accent: #0e7afa;
+            --accent-hover: #0d6bd9;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border: #444;
+            --live-red: #ff3b3b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: var(--bg-secondary);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .app-branding {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            font-size: 24px;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-indicator.offline {
+            background: rgba(128, 128, 128, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .status-indicator.live {
+            background: rgba(255, 59, 59, 0.2);
+            color: var(--live-red);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.recording {
+            background: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        .left-sidebar {
+            width: 30%;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .scenes-panel {
+            flex: 0 0 40%;
+        }
+
+        .sources-panel {
+            flex: 1;
+        }
+
+        .scene-item, .source-item {
+            padding: 10px 12px;
+            margin: 4px 0;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .scene-item:hover, .source-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .scene-item.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .source-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .source-icon {
+            font-size: 16px;
+        }
+
+        .source-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-btn.active {
+            color: var(--accent);
+        }
+
+        /* Center Canvas */
+        .center-canvas {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+        }
+
+        .canvas-header {
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .canvas-info {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .preview-canvas {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            background: #000;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .preview-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .scene-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .scene-preview.active {
+            display: block;
+        }
+
+        .source-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            width: 20%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .destinations-panel {
+            flex: 0 0 50%;
+        }
+
+        .settings-panel {
+            flex: 1;
+        }
+
+        .destination-item {
+            padding: 12px;
+            margin: 6px 0;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .destination-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .destination-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .platform-logo {
+            font-size: 20px;
+        }
+
+        .destination-status {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .destination-status.connected {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .destination-status.disconnected {
+            background: rgba(128, 128, 128, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .destination-status.streaming {
+            background: rgba(255, 59, 59, 0.2);
+            color: var(--live-red);
+        }
+
+        .setting-group {
+            margin-bottom: 16px;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .setting-input, .setting-select {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .setting-slider {
+            width: 100%;
+        }
+
+        .slider-value {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Bottom Control Bar */
+        .bottom-bar {
+            background: var(--bg-secondary);
+            border-top: 2px solid var(--border);
+            display: flex;
+            padding: 12px 16px;
+            gap: 20px;
+        }
+
+        .audio-mixer {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+        }
+
+        .audio-channel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .channel-name {
+            font-weight: 600;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            flex: 1;
+        }
+
+        .meter {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--success), var(--warning), var(--error));
+            transition: width 0.1s;
+        }
+
+        .statistics {
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-width: 500px;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .source-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .source-type-card {
+            padding: 16px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .source-type-card:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .source-type-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .source-type-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .source-type-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stream-info {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin: 12px 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            border-radius: 4px;
+            padding: 12px 16px;
+            min-width: 250px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .small-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .stream-counter {
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav">
+            <div class="app-branding">
+                <div class="app-logo">📡</div>
+                <div class="app-title">MultiStream Studio</div>
+            </div>
+            <div id="statusIndicator" class="status-indicator offline">
+                <div class="status-dot"></div>
+                <span>Offline</span>
+            </div>
+            <div class="nav-actions">
+                <button id="btnGoLive" class="btn btn-primary">
+                    ▶️ Go Live
+                </button>
+                <button id="btnStopStream" class="btn btn-danger" style="display: none;">
+                    ⏹ Stop Stream
+                </button>
+                <button id="btnStartRecording" class="btn btn-warning">
+                    🔴 Start Recording
+                </button>
+                <button id="btnStopRecording" class="btn btn-danger" style="display: none;">
+                    ⏹ Stop Recording
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="left-sidebar">
+                <!-- Scenes Panel -->
+                <div class="panel scenes-panel">
+                    <div class="panel-header">
+                        <span>Scenes</span>
+                        <button id="btnAddScene" class="btn-icon btn-secondary" title="Add Scene">➕</button>
+                    </div>
+                    <div class="panel-content" id="scenesList"></div>
+                </div>
+
+                <!-- Sources Panel -->
+                <div class="panel sources-panel">
+                    <div class="panel-header">
+                        <span>Sources</span>
+                        <button id="btnAddSource" class="btn-icon btn-secondary" title="Add Source">➕</button>
+                    </div>
+                    <div class="panel-content" id="sourcesList"></div>
+                </div>
+            </div>
+
+            <!-- Center Canvas -->
+            <div class="center-canvas">
+                <div class="canvas-header">
+                    <div class="canvas-info">
+                        <span id="resolutionDisplay">1920x1080</span>
+                        <span id="fpsDisplay">30 FPS</span>
+                        <span>Preview</span>
+                    </div>
+                    <div>
+                        <button class="btn-secondary btn" id="btnToggleGrid">
+                            📐 Grid
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="preview-canvas" id="previewCanvas">
+                        <div class="preview-placeholder">
+                            <div class="preview-placeholder-icon">📹</div>
+                            <div>Add sources to your scene to preview</div>
+                        </div>
+                        <div id="scenePreviews"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="right-sidebar">
+                <!-- Stream Destinations Panel -->
+                <div class="panel destinations-panel">
+                    <div class="panel-header">
+                        <span>Stream Destinations</span>
+                        <button id="btnAddDestination" class="btn-icon btn-secondary" title="Add Destination">➕</button>
+                    </div>
+                    <div class="panel-content" id="destinationsList"></div>
+                    <div id="streamCounter" class="stream-counter" style="display: none;">
+                        Streaming to <span id="streamCount">0</span> platform(s)
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="panel settings-panel">
+                    <div class="panel-header">
+                        <span>Settings</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="setting-group">
+                            <label class="setting-label">Video Resolution</label>
+                            <select id="resolutionSelect" class="setting-select">
+                                <option value="1920x1080">1080p (1920x1080)</option>
+                                <option value="1280x720">720p (1280x720)</option>
+                                <option value="854x480">480p (854x480)</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Frame Rate</label>
+                            <select id="fpsSelect" class="setting-select">
+                                <option value="60">60 FPS</option>
+                                <option value="30" selected>30 FPS</option>
+                                <option value="24">24 FPS</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Video Bitrate</label>
+                            <input type="range" id="bitrateSlider" class="setting-slider" min="500" max="8000" value="3500" step="100">
+                            <div class="slider-value"><span id="bitrateValue">3500</span> kbps</div>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Audio Bitrate</label>
+                            <select id="audioBitrateSelect" class="setting-select">
+                                <option value="128">128 kbps</option>
+                                <option value="192" selected>192 kbps</option>
+                                <option value="256">256 kbps</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Recording Format</label>
+                            <select id="recordingFormatSelect" class="setting-select">
+                                <option value="MP4" selected>MP4</option>
+                                <option value="MKV">MKV</option>
+                                <option value="FLV">FLV</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Recording Path</label>
+                            <input type="text" class="setting-input" id="recordingPath" value="~/Videos/MultiStream/" readonly>
+                            <div class="help-text">Recordings saved to this location</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Control Bar -->
+        <div class="bottom-bar">
+            <div class="audio-mixer" id="audioMixer"></div>
+            <div class="statistics">
+                <div class="stat-item">
+                    <span class="stat-label">Bitrate:</span>
+                    <span class="stat-value" id="statBitrate">0 kbps</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Dropped:</span>
+                    <span class="stat-value" id="statDropped">0 (0%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">CPU:</span>
+                    <span class="stat-value" id="statCPU">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time:</span>
+                    <span class="stat-value" id="statTime">00:00:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Source Type Selector -->
+    <div id="modalAddSource" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Source</h3>
+                <button class="modal-close" onclick="closeModal('modalAddSource')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="source-type-grid" id="sourceTypeGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Video URL Source -->
+    <div id="modalVideoURL" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌐 Add Video URL Source</h3>
+                <button class="modal-close" onclick="closeModal('modalVideoURL')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Source Name</label>
+                    <input type="text" id="urlSourceName" class="form-input" placeholder="My Video Source" value="Video Source">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Video URL</label>
+                    <input type="text" id="videoURL" class="form-input" placeholder="https://www.youtube.com/watch?v=...">
+                    <div class="help-text">Supports YouTube, Twitch, Facebook Live, and other platforms</div>
+                </div>
+                <div class="form-group">
+                    <button id="btnExtractStream" class="btn btn-primary" style="width: 100%;">
+                        🔍 Extract Stream
+                    </button>
+                </div>
+                <div id="streamInfoContainer" style="display: none;">
+                    <div class="stream-info">
+                        <div class="info-row">
+                            <span>Platform:</span>
+                            <strong id="streamPlatform">-</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Title:</span>
+                            <strong id="streamTitle">-</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Duration:</span>
+                            <strong id="streamDuration">-</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Resolution:</span>
+                            <strong id="streamResolution">-</strong>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkLoopVideo" checked>
+                            <span>Loop video</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="chkIncludeAudio" checked>
+                            <span>Include audio</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modalVideoURL')">Cancel</button>
+                <button id="btnAddURLSource" class="btn btn-primary" disabled>Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Local File Source -->
+    <div id="modalLocalFile" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📁 Add Local Video File</h3>
+                <button class="modal-close" onclick="closeModal('modalLocalFile')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Source Name</label>
+                    <input type="text" id="fileSourceName" class="form-input" placeholder="My Video" value="Local Video">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Video File</label>
+                    <input type="text" id="localFilePath" class="form-input" placeholder="/path/to/video.mp4" value="~/Videos/stream.mp4">
+                    <div class="help-text">Supported: MP4, MKV, AVI, MOV, FLV, WebM</div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chkLoopFile" checked>
+                        <span>Loop video</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chkIncludeFileAudio" checked>
+                        <span>Include audio</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modalLocalFile')">Cancel</button>
+                <button id="btnAddFileSource" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Other Source Types -->
+    <div id="modalOtherSource" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="otherSourceTitle">Add Source</h3>
+                <button class="modal-close" onclick="closeModal('modalOtherSource')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Source Name</label>
+                    <input type="text" id="otherSourceName" class="form-input" placeholder="Source Name">
+                </div>
+                <div class="form-group" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <div style="font-size: 48px; margin-bottom: 16px;" id="otherSourceIcon">📹</div>
+                    <div>Source type configuration</div>
+                    <div class="help-text">This source type would show specific configuration options</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modalOtherSource')">Cancel</button>
+                <button id="btnAddOtherSource" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Destination -->
+    <div id="modalAddDestination" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Stream Destination</h3>
+                <button class="modal-close" onclick="closeModal('modalAddDestination')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Platform</label>
+                    <select id="platformSelect" class="form-input">
+                        <option value="youtube">🔴 YouTube Live</option>
+                        <option value="facebook">📘 Facebook Live</option>
+                        <option value="twitch">💜 Twitch</option>
+                        <option value="custom">📡 Custom RTMP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Server URL</label>
+                    <input type="text" id="serverURL" class="form-input" value="rtmp://a.rtmp.youtube.com/live2/">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stream Key</label>
+                    <input type="password" id="streamKey" class="form-input" placeholder="xxxx-xxxx-xxxx-xxxx">
+                    <div class="help-text">Your stream key is kept secure and never shared</div>
+                </div>
+                <div class="form-group">
+                    <button id="btnTestConnection" class="btn btn-secondary" style="width: 100%;">
+                        🔌 Test Connection
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modalAddDestination')">Cancel</button>
+                <button id="btnSaveDestination" class="btn btn-primary">Add Destination</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Scene -->
+    <div id="modalAddScene" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Scene</h3>
+                <button class="modal-close" onclick="closeModal('modalAddScene')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Scene Name</label>
+                    <input type="text" id="newSceneName" class="form-input" placeholder="My Scene">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modalAddScene')">Cancel</button>
+                <button id="btnSaveScene" class="btn btn-primary">Create Scene</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="toast-title" id="toastTitle">Notification</div>
+        <div class="toast-message" id="toastMessage">Message</div>
+    </div>
+
+    <script>
+        // Application State
+        const appState = {
+            scenes: [
+                {
+                    id: 1,
+                    name: 'Main Scene',
+                    sources: [
+                        { id: 1, name: 'Video Source', type: 'video_url', icon: '🌐', visible: true, locked: false }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: 'Starting Soon',
+                    sources: [
+                        { id: 2, name: 'Starting Soon Image', type: 'image', icon: '🖼️', visible: true, locked: false }
+                    ]
+                },
+                {
+                    id: 3,
+                    name: 'Be Right Back',
+                    sources: [
+                        { id: 3, name: 'BRB Image', type: 'image', icon: '🖼️', visible: true, locked: false }
+                    ]
+                },
+                {
+                    id: 4,
+                    name: 'Ending Scene',
+                    sources: [
+                        { id: 4, name: 'Thanks Image', type: 'image', icon: '🖼️', visible: true, locked: false }
+                    ]
+                }
+            ],
+            activeSceneId: 1,
+            destinations: [],
+            isStreaming: false,
+            isRecording: false,
+            audioChannels: [
+                { name: 'Desktop Audio', volume: 80, muted: false },
+                { name: 'Microphone', volume: 100, muted: false },
+                { name: 'Video Source Audio', volume: 75, muted: false }
+            ],
+            statistics: {
+                bitrate: 0,
+                dropped: 0,
+                cpu: 0,
+                streamTime: 0
+            },
+            settings: {
+                resolution: '1920x1080',
+                fps: 30,
+                bitrate: 3500,
+                audioBitrate: 192,
+                recordingFormat: 'MP4',
+                recordingPath: '~/Videos/MultiStream/'
+            },
+            nextSceneId: 5,
+            nextSourceId: 5,
+            nextDestinationId: 1,
+            currentSourceType: null
+        };
+
+        const sourceTypes = [
+            { type: 'video_url', name: 'Video URL Source', icon: '🌐', description: 'Stream from YouTube, Twitch, Facebook, etc.' },
+            { type: 'local_file', name: 'Local Video File', icon: '📁', description: 'Stream pre-recorded video files' },
+            { type: 'webcam', name: 'Webcam/Camera', icon: '🎥', description: 'Capture from camera device' },
+            { type: 'screen', name: 'Screen Capture', icon: '🖥️', description: 'Capture screen or window' },
+            { type: 'image', name: 'Image', icon: '🖼️', description: 'Display static image' },
+            { type: 'text', name: 'Text', icon: '📝', description: 'Add text overlay' },
+            { type: 'browser', name: 'Browser Source', icon: '🌍', description: 'Embed web content' },
+            { type: 'audio_input', name: 'Audio Input', icon: '🎤', description: 'Capture microphone audio' }
+        ];
+
+        const platforms = [
+            { value: 'youtube', name: 'YouTube Live', logo: '🔴', serverUrl: 'rtmp://a.rtmp.youtube.com/live2/' },
+            { value: 'facebook', name: 'Facebook Live', logo: '📘', serverUrl: 'rtmps://live-api-s.facebook.com:443/rtmp/' },
+            { value: 'twitch', name: 'Twitch', logo: '💜', serverUrl: 'rtmp://live.twitch.tv/app/' },
+            { value: 'custom', name: 'Custom RTMP', logo: '📡', serverUrl: 'rtmp://custom-server/live/' }
+        ];
+
+        // Initialize Application
+        function init() {
+            renderScenes();
+            renderSources();
+            renderDestinations();
+            renderAudioMixer();
+            renderSourceTypeGrid();
+            updatePreview();
+            updateSettings();
+            
+            // Event Listeners
+            document.getElementById('btnGoLive').addEventListener('click', goLive);
+            document.getElementById('btnStopStream').addEventListener('click', stopStream);
+            document.getElementById('btnStartRecording').addEventListener('click', startRecording);
+            document.getElementById('btnStopRecording').addEventListener('click', stopRecording);
+            document.getElementById('btnAddScene').addEventListener('click', () => openModal('modalAddScene'));
+            document.getElementById('btnAddSource').addEventListener('click', () => openModal('modalAddSource'));
+            document.getElementById('btnAddDestination').addEventListener('click', () => openModal('modalAddDestination'));
+            document.getElementById('btnSaveScene').addEventListener('click', saveNewScene);
+            document.getElementById('btnExtractStream').addEventListener('click', extractStream);
+            document.getElementById('btnAddURLSource').addEventListener('click', addURLSource);
+            document.getElementById('btnAddFileSource').addEventListener('click', addFileSource);
+            document.getElementById('btnAddOtherSource').addEventListener('click', addOtherSource);
+            document.getElementById('btnSaveDestination').addEventListener('click', saveDestination);
+            document.getElementById('btnTestConnection').addEventListener('click', testConnection);
+            
+            document.getElementById('platformSelect').addEventListener('change', updateServerURL);
+            document.getElementById('resolutionSelect').addEventListener('change', updateResolution);
+            document.getElementById('fpsSelect').addEventListener('change', updateFPS);
+            document.getElementById('bitrateSlider').addEventListener('input', updateBitrate);
+            
+            // Start statistics simulation
+            setInterval(updateStatistics, 1000);
+        }
+
+        // Render Functions
+        function renderScenes() {
+            const container = document.getElementById('scenesList');
+            container.innerHTML = appState.scenes.map(scene => `
+                <div class="scene-item ${scene.id === appState.activeSceneId ? 'active' : ''}" 
+                     onclick="switchScene(${scene.id})">
+                    <span>${scene.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderSources() {
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const container = document.getElementById('sourcesList');
+            
+            if (!activeScene || activeScene.sources.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">No sources in this scene</div>';
+                return;
+            }
+            
+            container.innerHTML = activeScene.sources.map(source => `
+                <div class="source-item">
+                    <div class="source-item-left">
+                        <span class="source-icon">${source.icon}</span>
+                        <span>${source.name}</span>
+                    </div>
+                    <div class="source-controls">
+                        <button class="icon-btn ${source.visible ? 'active' : ''}" 
+                                onclick="toggleSourceVisibility(${source.id})" 
+                                title="${source.visible ? 'Hide' : 'Show'}">
+                            ${source.visible ? '👁' : '👁‍🗨'}
+                        </button>
+                        <button class="icon-btn ${source.locked ? 'active' : ''}" 
+                                onclick="toggleSourceLock(${source.id})" 
+                                title="${source.locked ? 'Unlock' : 'Lock'}">
+                            ${source.locked ? '🔒' : '🔓'}
+                        </button>
+                        <button class="icon-btn" onclick="removeSource(${source.id})" title="Remove">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderDestinations() {
+            const container = document.getElementById('destinationsList');
+            
+            if (appState.destinations.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">No destinations configured<br><br>Click + to add streaming platforms</div>';
+                return;
+            }
+            
+            container.innerHTML = appState.destinations.map(dest => `
+                <div class="destination-item">
+                    <div class="destination-header">
+                        <div class="destination-info">
+                            <span class="platform-logo">${dest.logo}</span>
+                            <div>
+                                <div style="font-weight: 600; font-size: 13px;">${dest.name}</div>
+                                <div class="small-text">${dest.serverUrl}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <span class="destination-status ${dest.status}">${dest.status}</span>
+                        <label class="checkbox-label">
+                            <input type="checkbox" ${dest.enabled ? 'checked' : ''} 
+                                   onchange="toggleDestination(${dest.id})">
+                            <span style="font-size: 12px;">Enable</span>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+            
+            const enabledCount = appState.destinations.filter(d => d.enabled).length;
+            if (enabledCount > 0) {
+                document.getElementById('streamCounter').style.display = 'block';
+                document.getElementById('streamCount').textContent = enabledCount;
+            } else {
+                document.getElementById('streamCounter').style.display = 'none';
+            }
+        }
+
+        function renderAudioMixer() {
+            const container = document.getElementById('audioMixer');
+            container.innerHTML = appState.audioChannels.map((channel, index) => `
+                <div class="audio-channel">
+                    <div class="channel-header">
+                        <span class="channel-name">${channel.name}</span>
+                        <button class="icon-btn ${channel.muted ? '' : 'active'}" 
+                                onclick="toggleMute(${index})">
+                            ${channel.muted ? '🔇' : '🔊'}
+                        </button>
+                    </div>
+                    <div class="volume-control">
+                        <input type="range" class="volume-slider" min="0" max="100" 
+                               value="${channel.volume}" 
+                               onchange="updateVolume(${index}, this.value)">
+                        <span style="font-size: 11px; min-width: 35px; text-align: right;">${channel.volume}%</span>
+                    </div>
+                    <div class="meter">
+                        <div class="meter-fill" style="width: ${channel.muted ? 0 : channel.volume}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSourceTypeGrid() {
+            const container = document.getElementById('sourceTypeGrid');
+            container.innerHTML = sourceTypes.map(type => `
+                <div class="source-type-card" onclick="selectSourceType('${type.type}')">
+                    <div class="source-type-icon">${type.icon}</div>
+                    <div class="source-type-name">${type.name}</div>
+                    <div class="source-type-desc">${type.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function updatePreview() {
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const container = document.getElementById('scenePreviews');
+            
+            if (!activeScene || activeScene.sources.length === 0) {
+                document.querySelector('.preview-placeholder').style.display = 'block';
+                container.innerHTML = '';
+                return;
+            }
+            
+            document.querySelector('.preview-placeholder').style.display = 'none';
+            
+            const positions = [
+                { top: '10%', left: '10%', width: '80%', height: '70%' },
+                { top: '5%', left: '5%', width: '25%', height: '20%' },
+                { top: '75%', left: '35%', width: '30%', height: '20%' },
+                { top: '5%', left: '70%', width: '25%', height: '20%' }
+            ];
+            
+            container.innerHTML = activeScene.sources.map((source, index) => {
+                if (!source.visible) return '';
+                const pos = positions[index % positions.length];
+                return `
+                    <div class="source-element" style="top: ${pos.top}; left: ${pos.left}; width: ${pos.width}; height: ${pos.height};">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; margin-bottom: 4px;">${source.icon}</div>
+                            <div>${source.name}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSettings() {
+            document.getElementById('resolutionDisplay').textContent = appState.settings.resolution;
+            document.getElementById('fpsDisplay').textContent = `${appState.settings.fps} FPS`;
+            document.getElementById('bitrateValue').textContent = appState.settings.bitrate;
+        }
+
+        // Scene Management
+        function switchScene(sceneId) {
+            appState.activeSceneId = sceneId;
+            renderScenes();
+            renderSources();
+            updatePreview();
+        }
+
+        function saveNewScene() {
+            const name = document.getElementById('newSceneName').value.trim();
+            if (!name) {
+                showToast('Error', 'Please enter a scene name', 'error');
+                return;
+            }
+            
+            const newScene = {
+                id: appState.nextSceneId++,
+                name: name,
+                sources: []
+            };
+            
+            appState.scenes.push(newScene);
+            renderScenes();
+            closeModal('modalAddScene');
+            showToast('Success', `Scene "${name}" created`);
+            document.getElementById('newSceneName').value = '';
+        }
+
+        // Source Management
+        function selectSourceType(type) {
+            appState.currentSourceType = type;
+            closeModal('modalAddSource');
+            
+            if (type === 'video_url') {
+                openModal('modalVideoURL');
+            } else if (type === 'local_file') {
+                openModal('modalLocalFile');
+            } else {
+                const sourceType = sourceTypes.find(st => st.type === type);
+                document.getElementById('otherSourceTitle').textContent = sourceType.name;
+                document.getElementById('otherSourceIcon').textContent = sourceType.icon;
+                document.getElementById('otherSourceName').value = sourceType.name;
+                openModal('modalOtherSource');
+            }
+        }
+
+        function extractStream() {
+            const url = document.getElementById('videoURL').value.trim();
+            if (!url) {
+                showToast('Error', 'Please enter a video URL', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnExtractStream');
+            btn.innerHTML = '<span class="loading"></span> Extracting...';
+            btn.disabled = true;
+            
+            // Simulate extraction
+            setTimeout(() => {
+                let platform = 'Unknown';
+                if (url.includes('youtube.com') || url.includes('youtu.be')) platform = 'YouTube';
+                else if (url.includes('twitch.tv')) platform = 'Twitch';
+                else if (url.includes('facebook.com')) platform = 'Facebook';
+                
+                document.getElementById('streamPlatform').textContent = platform;
+                document.getElementById('streamTitle').textContent = 'Sample Video Title';
+                document.getElementById('streamDuration').textContent = '12:34';
+                document.getElementById('streamResolution').textContent = '1920x1080';
+                
+                document.getElementById('streamInfoContainer').style.display = 'block';
+                document.getElementById('btnAddURLSource').disabled = false;
+                
+                btn.innerHTML = '🔍 Extract Stream';
+                btn.disabled = false;
+                
+                showToast('Success', 'Stream extracted successfully');
+            }, 2000);
+        }
+
+        function addURLSource() {
+            const name = document.getElementById('urlSourceName').value.trim();
+            const url = document.getElementById('videoURL').value.trim();
+            
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const newSource = {
+                id: appState.nextSourceId++,
+                name: name,
+                type: 'video_url',
+                icon: '🌐',
+                visible: true,
+                locked: false,
+                url: url
+            };
+            
+            activeScene.sources.push(newSource);
+            renderSources();
+            updatePreview();
+            closeModal('modalVideoURL');
+            showToast('Success', `Source "${name}" added`);
+            
+            // Reset form
+            document.getElementById('videoURL').value = '';
+            document.getElementById('streamInfoContainer').style.display = 'none';
+            document.getElementById('btnAddURLSource').disabled = true;
+        }
+
+        function addFileSource() {
+            const name = document.getElementById('fileSourceName').value.trim();
+            const path = document.getElementById('localFilePath').value.trim();
+            
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const newSource = {
+                id: appState.nextSourceId++,
+                name: name,
+                type: 'local_file',
+                icon: '📁',
+                visible: true,
+                locked: false,
+                path: path
+            };
+            
+            activeScene.sources.push(newSource);
+            renderSources();
+            updatePreview();
+            closeModal('modalLocalFile');
+            showToast('Success', `Source "${name}" added`);
+        }
+
+        function addOtherSource() {
+            const name = document.getElementById('otherSourceName').value.trim();
+            const sourceType = sourceTypes.find(st => st.type === appState.currentSourceType);
+            
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const newSource = {
+                id: appState.nextSourceId++,
+                name: name,
+                type: appState.currentSourceType,
+                icon: sourceType.icon,
+                visible: true,
+                locked: false
+            };
+            
+            activeScene.sources.push(newSource);
+            renderSources();
+            updatePreview();
+            closeModal('modalOtherSource');
+            showToast('Success', `Source "${name}" added`);
+        }
+
+        function toggleSourceVisibility(sourceId) {
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const source = activeScene.sources.find(s => s.id === sourceId);
+            source.visible = !source.visible;
+            renderSources();
+            updatePreview();
+        }
+
+        function toggleSourceLock(sourceId) {
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            const source = activeScene.sources.find(s => s.id === sourceId);
+            source.locked = !source.locked;
+            renderSources();
+        }
+
+        function removeSource(sourceId) {
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            activeScene.sources = activeScene.sources.filter(s => s.id !== sourceId);
+            renderSources();
+            updatePreview();
+            showToast('Success', 'Source removed');
+        }
+
+        // Destination Management
+        function updateServerURL() {
+            const platform = document.getElementById('platformSelect').value;
+            const platformData = platforms.find(p => p.value === platform);
+            document.getElementById('serverURL').value = platformData.serverUrl;
+        }
+
+        function testConnection() {
+            const btn = document.getElementById('btnTestConnection');
+            btn.innerHTML = '<span class="loading"></span> Testing...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = '🔌 Test Connection';
+                btn.disabled = false;
+                showToast('Success', 'Connection test successful');
+            }, 1500);
+        }
+
+        function saveDestination() {
+            const platform = document.getElementById('platformSelect').value;
+            const serverUrl = document.getElementById('serverURL').value.trim();
+            const streamKey = document.getElementById('streamKey').value.trim();
+            
+            if (!streamKey) {
+                showToast('Error', 'Please enter a stream key', 'error');
+                return;
+            }
+            
+            const platformData = platforms.find(p => p.value === platform);
+            const newDestination = {
+                id: appState.nextDestinationId++,
+                name: platformData.name,
+                logo: platformData.logo,
+                serverUrl: serverUrl,
+                streamKey: streamKey,
+                enabled: true,
+                status: 'connected'
+            };
+            
+            appState.destinations.push(newDestination);
+            renderDestinations();
+            closeModal('modalAddDestination');
+            showToast('Success', `${platformData.name} added`);
+            
+            document.getElementById('streamKey').value = '';
+        }
+
+        function toggleDestination(destId) {
+            const dest = appState.destinations.find(d => d.id === destId);
+            dest.enabled = !dest.enabled;
+            renderDestinations();
+        }
+
+        // Streaming Controls
+        function goLive() {
+            const enabledDestinations = appState.destinations.filter(d => d.enabled);
+            
+            if (enabledDestinations.length === 0) {
+                showToast('Error', 'Please add and enable at least one streaming destination', 'error');
+                return;
+            }
+            
+            const activeScene = appState.scenes.find(s => s.id === appState.activeSceneId);
+            if (!activeScene || activeScene.sources.length === 0) {
+                showToast('Warning', 'No sources in active scene', 'warning');
+            }
+            
+            appState.isStreaming = true;
+            document.getElementById('statusIndicator').className = 'status-indicator live';
+            document.getElementById('statusIndicator').innerHTML = '<div class="status-dot"></div><span>Live</span>';
+            
+            document.getElementById('btnGoLive').style.display = 'none';
+            document.getElementById('btnStopStream').style.display = 'inline-flex';
+            
+            // Update destinations status
+            enabledDestinations.forEach(dest => {
+                dest.status = 'streaming';
+            });
+            renderDestinations();
+            
+            showToast('Success', `Streaming to ${enabledDestinations.length} platform(s)`);
+        }
+
+        function stopStream() {
+            appState.isStreaming = false;
+            document.getElementById('statusIndicator').className = 'status-indicator offline';
+            document.getElementById('statusIndicator').innerHTML = '<div class="status-dot"></div><span>Offline</span>';
+            
+            document.getElementById('btnGoLive').style.display = 'inline-flex';
+            document.getElementById('btnStopStream').style.display = 'none';
+            
+            // Update destinations status
+            appState.destinations.forEach(dest => {
+                if (dest.status === 'streaming') {
+                    dest.status = 'connected';
+                }
+            });
+            renderDestinations();
+            
+            appState.statistics.streamTime = 0;
+            showToast('Success', 'Stream stopped');
+        }
+
+        function startRecording() {
+            appState.isRecording = true;
+            
+            if (!appState.isStreaming) {
+                document.getElementById('statusIndicator').className = 'status-indicator recording';
+                document.getElementById('statusIndicator').innerHTML = '<div class="status-dot"></div><span>Recording</span>';
+            }
+            
+            document.getElementById('btnStartRecording').style.display = 'none';
+            document.getElementById('btnStopRecording').style.display = 'inline-flex';
+            
+            showToast('Success', 'Recording started');
+        }
+
+        function stopRecording() {
+            appState.isRecording = false;
+            
+            if (!appState.isStreaming) {
+                document.getElementById('statusIndicator').className = 'status-indicator offline';
+                document.getElementById('statusIndicator').innerHTML = '<div class="status-dot"></div><span>Offline</span>';
+            }
+            
+            document.getElementById('btnStartRecording').style.display = 'inline-flex';
+            document.getElementById('btnStopRecording').style.display = 'none';
+            
+            const format = appState.settings.recordingFormat;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `recording_${timestamp}.${format.toLowerCase()}`;
+            
+            showToast('Success', `Recording saved: ${filename}`);
+        }
+
+        // Audio Controls
+        function toggleMute(index) {
+            appState.audioChannels[index].muted = !appState.audioChannels[index].muted;
+            renderAudioMixer();
+        }
+
+        function updateVolume(index, value) {
+            appState.audioChannels[index].volume = parseInt(value);
+            renderAudioMixer();
+        }
+
+        // Settings
+        function updateResolution() {
+            appState.settings.resolution = document.getElementById('resolutionSelect').value;
+            updateSettings();
+        }
+
+        function updateFPS() {
+            appState.settings.fps = parseInt(document.getElementById('fpsSelect').value);
+            updateSettings();
+        }
+
+        function updateBitrate() {
+            appState.settings.bitrate = parseInt(document.getElementById('bitrateSlider').value);
+            updateSettings();
+        }
+
+        // Statistics
+        function updateStatistics() {
+            if (appState.isStreaming) {
+                appState.statistics.streamTime++;
+                appState.statistics.bitrate = appState.settings.bitrate + Math.floor(Math.random() * 200 - 100);
+                appState.statistics.dropped = Math.floor(Math.random() * 5);
+                appState.statistics.cpu = 15 + Math.floor(Math.random() * 25);
+            } else if (appState.isRecording) {
+                appState.statistics.streamTime++;
+                appState.statistics.cpu = 10 + Math.floor(Math.random() * 15);
+            } else {
+                appState.statistics.bitrate = 0;
+                appState.statistics.cpu = 5 + Math.floor(Math.random() * 5);
+            }
+            
+            document.getElementById('statBitrate').textContent = `${appState.statistics.bitrate} kbps`;
+            document.getElementById('statDropped').textContent = `${appState.statistics.dropped} (0.${appState.statistics.dropped}%)`;
+            document.getElementById('statCPU').textContent = `${appState.statistics.cpu}%`;
+            
+            const hours = Math.floor(appState.statistics.streamTime / 3600);
+            const minutes = Math.floor((appState.statistics.streamTime % 3600) / 60);
+            const seconds = appState.statistics.streamTime % 60;
+            document.getElementById('statTime').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Modal Management
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Toast Notifications
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            
+            toast.className = 'toast';
+            if (type === 'error') toast.classList.add('error');
+            if (type === 'warning') toast.classList.add('warning');
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
