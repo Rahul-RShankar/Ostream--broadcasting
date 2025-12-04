@@ -1,7 +1,7 @@
 services:
   # Backend API (Node.js)
   - type: web
-    name:backend
+    name: backend
     env: node
     repo: https://github.com/Rahul-RShankar/Ostream--broadcasting
     rootDir: backend
