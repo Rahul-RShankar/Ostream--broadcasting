@@ -17,7 +17,7 @@ services:
 
   # Frontend (Static + Nginx proxy)
   - type: web
-    name:frontend
+    name: frontend
     env: static
     repo: https://github.com/Rahul-RShankar/Ostream--broadcasting  
     rootDir: frontend
@@ -25,7 +25,7 @@ services:
     envVars:
       - key: BACKEND_URL
         fromService:
-          name:backend
+          name: backend
           type: web
           property: hostport  # Fixed: hostport instead of url
 
