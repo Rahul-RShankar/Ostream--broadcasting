@@ -5,7 +5,7 @@ services:
     env: node
     repo: https://github.com/yourusername/multistream-app
     rootDir: backend
-    plan: starter
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
@@ -21,7 +21,7 @@ services:
     env: static
     repo: https://github.com/yourusername/multistream-app  
     rootDir: frontend
-    plan: starter
+    plan: free
     envVars:
       - key: BACKEND_URL
         fromService:
@@ -34,4 +34,4 @@ services:
     name: multistream-rtmp
     env: docker  
     dockerfilePath: ./Dockerfile.rtmp
-    plan: starter
+    plan: free
