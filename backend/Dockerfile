@@ -20,8 +20,8 @@ RUN npm cache clean --force && npm ci --only=production
 COPY backend/ ./backend/
 
 # Copy nginx configs FROM ROOT
-// COPY nginx.conf /etc/nginx/nginx.conf
-// COPY nginx-frontend.conf /etc/nginx/conf.d/default.conf
+# COPY nginx.conf /etc/nginx/nginx.conf
+# COPY nginx-frontend.conf /etc/nginx/conf.d/default.conf
 
 # Copy frontend static files to nginx
 COPY frontend/ /usr/share/nginx/html/
@@ -37,6 +37,7 @@ EXPOSE 80 1935
 
 # Start nginx + Node.js
 CMD sh -c "nginx -g 'daemon off;' & cd /app && node backend/index.js & wait"
+
 
 
 
