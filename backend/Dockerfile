@@ -1,41 +1,38 @@
 FROM node:18-alpine3.17
 
-# Install python3, pip, ffmpeg (required dependencies)
-RUN apk add --no-cache python3 py3-pip ffmpeg
+# Install nginx, python3, pip, ffmpeg (ALL dependencies)
+RUN apk add --no-cache nginx python3 py3-pip ffmpeg
 
-# Install yt-dlp via pip
+# Install yt-dlp
 RUN pip3 install yt-dlp
 
 # Set working directory
-WORKDIR /
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install node dependencies
-RUN npm install
+# Fix npm cache issue + install
+RUN npm cache clean --force && npm ci --only=production
 
-# Copy rest of backend source code
-COPY . .
+# Copy backend source code
+COPY backend/ .
 
-# Copy nginx config from parent directory
-COPY ../nginx.conf /etc/nginx/nginx.conf
+# Copy nginx configs FROM ROOT (build context = .)
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx-frontend.conf /etc/nginx/conf.d/default.conf
 
-# Create necessary directories
-RUN mkdir -p /var/run/nginx
+# Copy frontend static files to nginx
+COPY frontend/ /usr/share/nginx/html/
 
-# Expose rtmp ports
-EXPOSE 1935
+# Create nginx directories
+RUN mkdir -p /var/run/nginx /var/log/nginx /usr/share/nginx/html
 
-# Start nginx and Node.js
-CMD ["sh", "-c", "nginx && npm start"]
-# Expose backend port
-EXPOSE 3000
+# Fix nginx config permissions
+RUN chown -R nginx:nginx /var/log/nginx /var/run/nginx /usr/share/nginx/html
 
-# Start backend server
-CMD ["node", "index.js"]
+# Expose HTTP (Render requirement) + RTMP
+EXPOSE 80 1935
 
-
-
-
-
+# Start nginx + Node.js together
+CMD sh -c "nginx -g 'daemon off;' & node index.js"
