@@ -43,7 +43,8 @@ app.post('/extract-stream', (req, res) => {
   }
 
   console.log('Extracting stream for:', url); // Add logging
-
+const ytDlpArgs = url.includes('youtube.com') || url.includes('youtu.be') 
+    ? `yt-dlp --extractor-args "youtube:player_client=web" -g -f "best[height<=720]" "${url}"`
   // Create child process with timeout
   const child = exec(`yt-dlp -g -f "best[height<=720]" "${url}"`, { 
     timeout: 25000, // 25 second timeout
